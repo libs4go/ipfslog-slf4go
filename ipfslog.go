@@ -21,6 +21,7 @@ type loggerJSON struct {
 	TS      string `json:"ts"`
 	Logger  string `json:"logger"`
 	Message string `json:"msg"`
+	Error   string `json:"error"`
 }
 
 var errlog = slf4go.Get("ipfslog")
@@ -57,6 +58,19 @@ func redirectLoop(reader *ipfslog.PipeReader) {
 	for {
 		decoder := json.NewDecoder(reader)
 
+		// var message interface{}
+
+		// err := decoder.Decode(&message)
+
+		// if err != nil {
+		// 	errlog.E("decode ipfs log error {@error}", err)
+		// 	continue
+		// }
+
+		// buff, _ := json.Marshal(message)
+
+		// errlog.I(string(buff))
+
 		var logEntry loggerJSON
 
 		err := decoder.Decode(&logEntry)
@@ -76,6 +90,12 @@ func redirectLoop(reader *ipfslog.PipeReader) {
 
 		f := getLogF(logEntry.Level, log)
 
-		f(logEntry.Message)
+		if logEntry.Error != "" {
+			f(logEntry.Message)
+			log.E(logEntry.Error)
+		} else {
+			f(logEntry.Message)
+		}
+
 	}
 }
